@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ChannelDefinition, ModelProfile } from '../types'
-import { graphSelectionForModel } from './graphSelection'
+import { graphSelectionForModel, pinnedGraphChannels } from './graphSelection'
 
 const channels: ChannelDefinition[] = [
   { key: 'throttle||1', rawLabel: 'Throttle', label: 'Throttle', unit: '', occurrence: 1, index: 0, kind: 'numeric' },
@@ -31,5 +31,10 @@ describe('graphSelectionForModel', () => {
     const legacy = model()
     delete legacy.graphChannelKeys
     expect(graphSelectionForModel(legacy, channels, 24)).toEqual(['vfr|%|1'])
+  })
+
+  it('returns pinned active channels regardless of the saved selection', () => {
+    expect(pinnedGraphChannels(model(['throttle||1']), channels, 24)).toEqual(['vfr|%|1'])
+    expect(pinnedGraphChannels(model([]), channels, 0)).toEqual([])
   })
 })
