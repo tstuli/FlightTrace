@@ -160,6 +160,35 @@ test('groups LiPo cells into pack voltage and cell-balance analysis', async ({ p
   await expect(balance).toContainText('0.300 V')
 })
 
+test('maps flexible GPS columns and colors the flight path by altitude', async ({ page }) => {
+  await page.goto('/')
+  const csv = [
+    'Timestamp,GPS.lat(deg),Position Lng(deg),Relative Height(m),Throttle',
+    '2026-06-01 12:00:00.000,43.6000,-79.6000,5,-1024',
+    '2026-06-01 12:00:01.000,43.6004,-79.5999,20,-500',
+    '2026-06-01 12:00:02.000,43.6007,-79.5994,45,-400',
+    '2026-06-01 12:00:03.000,43.6003,-79.5990,30,-500',
+    '2026-06-01 12:00:04.000,43.6000,-79.6000,7,-1024'
+  ].join('\n')
+  await page.locator('input[type="file"][accept*="csv"]').setInputFiles({
+    name: 'GPS-MAP-2026-06-01-12-00-00.csv', mimeType: 'text/csv', buffer: Buffer.from(csv)
+  })
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await page.getByRole('button', { name: 'Save plane and import' }).click()
+  await page.getByRole('link', { name: /GPS-MAP.*Open flight library/ }).click()
+  await page.locator('.log-main').click()
+
+  await expect(page.getByRole('heading', { name: 'Flight path' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'GPS flight path colored by altitude' })).toBeVisible()
+  await expect(page.getByText('GPS distance')).toBeVisible()
+  await expect(page.getByText('Altitude range')).toBeVisible()
+  const pathSegments = page.locator('.flight-path-segment')
+  await expect(pathSegments).toHaveCount(4)
+  expect(await pathSegments.first().getAttribute('stroke')).not.toBe(await pathSegments.last().getAttribute('stroke'))
+})
+
 test('skips every matching plane in the current upload batch', async ({ page }) => {
   await page.goto('/')
   const csv = Buffer.from('Date,Time,VFR(%)\n2026-06-01,12:00:00.000,100\n2026-06-01,12:00:01.000,90')
