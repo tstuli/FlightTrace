@@ -42,8 +42,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npx playwright install --with-deps chromium firefox webkit msedge
       - run: npm run test:e2e
+        env:
+          PLAYWRIGHT_EDGE: '1'
       - uses: actions/upload-artifact@v6
         if: failure()
         with:

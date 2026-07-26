@@ -1,5 +1,5 @@
 /* global self, caches, fetch, URL */
-const CACHE_NAME = 'flighttrace-shell-v5'
+const CACHE_NAME = 'flighttrace-shell-__BUILD_ID__'
 
 async function precacheShell() {
   const cache = await caches.open(CACHE_NAME)

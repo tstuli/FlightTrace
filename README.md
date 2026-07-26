@@ -24,6 +24,9 @@ npx playwright install
 npm run test:e2e
 ```
 
+Continuous integration additionally installs Microsoft Edge and runs the same
+upload and analysis checks in Edge, Chromium, Firefox, and mobile WebKit.
+
 The checked-in tests use generated telemetry data. CSV files are ignored and
 real flight logs must remain outside this repository.
 

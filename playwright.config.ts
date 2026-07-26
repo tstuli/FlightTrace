@@ -7,6 +7,7 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit-mobile', use: { ...devices['iPhone 13'] } }
+    { name: 'webkit-mobile', use: { ...devices['iPhone 13'] } },
+    ...(process.env.PLAYWRIGHT_EDGE === '1' ? [{ name: 'edge', use: { ...devices['Desktop Edge'], channel: 'msedge' as const } }] : [])
   ]
 })

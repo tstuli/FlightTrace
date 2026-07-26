@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AppErrorBoundary } from './components/AppErrorBoundary'
 import { LibraryPage } from './pages/LibraryPage'
 import { LogPage } from './pages/LogPage'
 import { ModelPage } from './pages/ModelPage'
@@ -30,4 +31,4 @@ function AppShell() {
   return <div className="app"><header className="site-header"><Link className="brand" to="/"><span className="brand-mark">✦</span><span>FLIGHT<em>TRACE</em></span></Link><nav><Link to="/">Library</Link><Link to="/storage">Storage</Link></nav></header>{page}<footer><span>FlightTrace public beta · © 2026 FlightTrace contributors · <a href="https://github.com/tstuli/FlightTrace/blob/main/LICENSE" target="_blank" rel="noreferrer">GNU GPLv3</a></span><span>Telemetry analysis is advisory. Always follow equipment guidance. Provided “as is,” without warranties.</span></footer></div>
 }
 
-export default function App() { return <AppShell /> }
+export default function App() { return <AppErrorBoundary><AppShell /></AppErrorBoundary> }

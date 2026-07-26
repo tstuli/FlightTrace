@@ -29,7 +29,9 @@ test('reloads the production app while offline', async ({ page, context, browser
     else navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true })
   }))
   const cachedUrls = await page.evaluate(async () => {
-    const cache = await caches.open('flighttrace-shell-v5')
+    const cacheName = (await caches.keys()).find((name) => name.startsWith('flighttrace-shell-'))
+    if (!cacheName) return []
+    const cache = await caches.open(cacheName)
     return (await cache.keys()).map((request) => request.url)
   })
   expect(cachedUrls.some((url) => url.endsWith('/index.html'))).toBeTruthy()
