@@ -179,9 +179,15 @@ progress { width: 100%; accent-color: var(--mint); }
 .flight-map-stats span { min-width: 118px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #102333; display: flex; flex-direction: column; gap: 3px; }
 .flight-map-stats small { color: var(--muted); font-size: .62rem; text-transform: uppercase; letter-spacing: .07em; }
 .flight-map-stats strong { font-size: .86rem; white-space: nowrap; }
-.flight-map-wrap { border: 1px solid #294357; border-radius: 14px; overflow: hidden; background: #07141e; }
-.flight-map { width: 100%; height: auto; aspect-ratio: 1000 / 590; display: block; }
+.flight-map-controls { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; color: var(--muted); font-size: .72rem; }
+.flight-map-error { margin: 0 0 12px; color: var(--amber); font-size: .75rem; }
+.flight-map-wrap { position: relative; border: 1px solid #294357; border-radius: 14px; overflow: hidden; background: #07141e; }
+.flight-map { position: relative; z-index: 1; width: 100%; height: auto; aspect-ratio: 1000 / 590; display: block; }
 .flight-map-background { fill: #07141e; }
+.flight-map-background.basemap { fill: transparent; }
+.flight-map-tiles { position: absolute; inset: 0; overflow: hidden; }
+.flight-map-tiles img { position: absolute; display: block; max-width: none; opacity: .82; }
+.flight-map-tile-shade { position: absolute; inset: 0; background: rgba(5, 18, 27, .28); pointer-events: none; }
 .flight-map-grid { stroke: #1d3445; stroke-width: 1; vector-effect: non-scaling-stroke; }
 .flight-map-north { fill: #b9cad7; font-size: 17px; font-weight: 800; }
 .flight-path-segment { stroke-width: 4; stroke-linecap: round; vector-effect: non-scaling-stroke; }
@@ -190,6 +196,8 @@ progress { width: 100%; accent-color: var(--mint); }
 .flight-map-marker.finish { fill: var(--amber); }
 .flight-map-marker-label { fill: #edf5fb; font-size: 15px; font-weight: 750; paint-order: stroke; stroke: #07141e; stroke-width: 5px; stroke-linejoin: round; }
 .flight-map-coordinate { fill: #698093; font-size: 12px; font-family: ui-monospace, monospace; }
+.flight-map-attribution { position: absolute; z-index: 2; right: 7px; bottom: 6px; padding: 3px 6px; border-radius: 4px; background: rgba(255,255,255,.88); color: #173047; font-size: .62rem; text-decoration: none; }
+.flight-map-attribution:hover { color: #000; text-decoration: underline; }
 .flight-altitude-legend { display: grid; grid-template-columns: auto minmax(120px, 360px) auto; align-items: center; justify-content: center; gap: 10px; margin-top: 11px; color: var(--muted); font-size: .7rem; }
 .flight-altitude-legend i { width: min(360px, 32vw); height: 8px; border-radius: 99px; background: linear-gradient(90deg, hsl(205 86% 58%), hsl(110 86% 58%), hsl(12 86% 58%)); }
 .flight-altitude-legend i.unavailable { background: var(--mint); }
@@ -288,6 +296,7 @@ footer a:hover { color: var(--mint); }
   .flight-map-heading { flex-direction: column; }
   .flight-map-stats { width: 100%; justify-content: flex-start; }
   .flight-map-stats span { flex: 1 1 125px; }
+  .flight-map-controls { align-items: flex-start; flex-direction: column; }
   .flight-map-coordinate { display: none; }
   .field.wide, .battery-fields.wide { grid-column: auto; }
   .stepper li { font-size: 0; }

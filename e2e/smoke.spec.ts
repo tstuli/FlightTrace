@@ -164,7 +164,16 @@ test('groups LiPo cells into pack voltage and cell-balance analysis', async ({ p
   await expect(balance).toContainText('0.300 V')
 })
 
-test('maps flexible GPS columns and colors the flight path by altitude', async ({ page }) => {
+test('maps flexible GPS columns and colors the flight path by altitude', async ({ page, browserName }) => {
+  const tileRequests: string[] = []
+  await page.route('https://tile.openstreetmap.org/**', async (route) => {
+    tileRequests.push(route.request().url())
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+X1WzNwAAAABJRU5ErkJggg==', 'base64')
+    })
+  })
   await page.goto('/')
   const csv = [
     'Timestamp,GPS.lat(deg),Position Lng(deg),Relative Height(m),Throttle',
@@ -188,6 +197,24 @@ test('maps flexible GPS columns and colors the flight path by altitude', async (
   await expect(page.getByRole('img', { name: 'GPS flight path colored by altitude' })).toBeVisible()
   await expect(page.getByText('GPS distance')).toBeVisible()
   await expect(page.getByText('Altitude range')).toBeVisible()
+  expect(tileRequests).toEqual([])
+  await expect(page.getByText(/shares the approximate flight area/)).toBeVisible()
+  await page.getByRole('button', { name: 'Load street map' }).click()
+  await expect(page.getByRole('link', { name: '© OpenStreetMap contributors' })).toBeVisible()
+  await expect(page.locator('.flight-map-tiles img')).not.toHaveCount(0)
+  if (browserName !== 'webkit') {
+    await expect.poll(() => tileRequests.length).toBeGreaterThan(0)
+    expect(tileRequests.length).toBeLessThanOrEqual(30)
+  } else {
+    await expect(page.locator('.flight-map-tiles img').first()).toHaveAttribute('src', /^https:\/\/tile\.openstreetmap\.org\/\d+\/\d+\/\d+\.png$/)
+  }
+  await page.getByRole('button', { name: 'Hide street map' }).click()
+  await expect(page.locator('.flight-map-tiles img')).toHaveCount(0)
+  expect(await page.locator('section.analysis-panel').evaluateAll((panels) => {
+    const statistics = panels.findIndex((panel) => panel.querySelector('h2')?.textContent === 'Statistics')
+    const flightPath = panels.findIndex((panel) => panel.querySelector('h2')?.textContent === 'Flight path')
+    return statistics >= 0 && flightPath > statistics
+  })).toBeTruthy()
   const pathSegments = page.locator('.flight-path-segment')
   await expect(pathSegments).toHaveCount(4)
   expect(await pathSegments.first().getAttribute('stroke')).not.toBe(await pathSegments.last().getAttribute('stroke'))
