@@ -32,15 +32,21 @@ test('reloads the production app while offline', async ({ page, context, browser
     if (navigator.serviceWorker.controller) resolve()
     else navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true })
   }))
-  const cachedUrls = await page.evaluate(async () => {
+  const cachedShell = await page.evaluate(async () => {
     const cacheName = (await caches.keys()).find((name) => name.startsWith('flighttrace-shell-'))
-    if (!cacheName) return []
+    if (!cacheName) return { urls: [], cachedAt: null }
     const cache = await caches.open(cacheName)
-    return (await cache.keys()).map((request) => request.url)
+    const indexResponse = await cache.match('./index.html')
+    return {
+      urls: (await cache.keys()).map((request) => request.url),
+      cachedAt: Number(indexResponse?.headers.get('X-FlightTrace-Cached-At')) || null
+    }
   })
-  expect(cachedUrls.some((url) => url.endsWith('/index.html'))).toBeTruthy()
-  expect(cachedUrls.some((url) => url.includes('/assets/index-') && url.endsWith('.js'))).toBeTruthy()
-  expect(cachedUrls.some((url) => url.includes('/assets/csv.worker-') && url.endsWith('.js'))).toBeTruthy()
+  expect(cachedShell.urls.some((url) => url.endsWith('/index.html'))).toBeTruthy()
+  expect(cachedShell.urls.some((url) => url.includes('/assets/index-') && url.endsWith('.js'))).toBeTruthy()
+  expect(cachedShell.urls.some((url) => url.includes('/assets/csv.worker-') && url.endsWith('.js'))).toBeTruthy()
+  expect(cachedShell.cachedAt).not.toBeNull()
+  expect(Date.now() - cachedShell.cachedAt!).toBeLessThan(10 * 60 * 1000)
   await context.setOffline(true)
   await page.reload()
   await expect(page.getByRole('heading', { name: /Your flights/ }), {
@@ -53,6 +59,37 @@ test('reloads the production app while offline', async ({ page, context, browser
   })
   await expect(page.getByRole('heading', { name: 'Set up this plane' })).toBeVisible()
   await context.setOffline(false)
+})
+
+test('refreshes page HTML after its ten-minute cache lifetime', async ({ page }) => {
+  await page.goto('/')
+  await page.evaluate(() => navigator.serviceWorker.ready)
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    if (navigator.serviceWorker.controller) resolve()
+    else navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true })
+  }))
+  const agedTimestamp = await page.evaluate(async () => {
+    const cacheName = (await caches.keys()).find((name) => name.startsWith('flighttrace-shell-'))
+    if (!cacheName) throw new Error('FlightTrace shell cache was not created')
+    const cache = await caches.open(cacheName)
+    const response = await cache.match('./index.html')
+    if (!response) throw new Error('Cached page HTML was not found')
+    const timestamp = Date.now() - 10 * 60 * 1000 - 1000
+    const headers = new Headers(response.headers)
+    headers.set('X-FlightTrace-Cached-At', timestamp.toString())
+    await cache.put('./index.html', new Response(await response.arrayBuffer(), { status: response.status, statusText: response.statusText, headers }))
+    return timestamp
+  })
+
+  await page.reload()
+
+  const refreshedTimestamp = await page.evaluate(async () => {
+    const cacheName = (await caches.keys()).find((name) => name.startsWith('flighttrace-shell-'))
+    if (!cacheName) return 0
+    const response = await (await caches.open(cacheName)).match('./index.html')
+    return Number(response?.headers.get('X-FlightTrace-Cached-At'))
+  })
+  expect(refreshedTimestamp).toBeGreaterThan(agedTimestamp)
 })
 
 test('does not load analytics or third-party tracking resources', async ({ page }) => {

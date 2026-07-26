@@ -5,7 +5,7 @@ import './styles.css'
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    void navigator.serviceWorker.register(new URL('./sw.js', document.baseURI), { scope: './' })
+    void navigator.serviceWorker.register(new URL('./sw.js', document.baseURI), { scope: './', updateViaCache: 'none' })
   })
 }
 

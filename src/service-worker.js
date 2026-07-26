@@ -1,5 +1,48 @@
-/* global self, caches, fetch, URL */
+/* global self, caches, fetch, URL, Headers, Response */
 const CACHE_NAME = 'flighttrace-shell-__BUILD_ID__'
+const PAGE_CACHE_MAX_AGE_MS = 10 * 60 * 1000
+const CACHED_AT_HEADER = 'X-FlightTrace-Cached-At'
+
+function withCacheTimestamp(response) {
+  const headers = new Headers(response.headers)
+  headers.set(CACHED_AT_HEADER, Date.now().toString())
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  })
+}
+
+function pageCacheIsFresh(response) {
+  const cachedAt = Number(response?.headers.get(CACHED_AT_HEADER))
+  const age = Date.now() - cachedAt
+  return Boolean(response && Number.isFinite(cachedAt) && age >= 0 && age < PAGE_CACHE_MAX_AGE_MS)
+}
+
+async function cachePage(response) {
+  const cache = await caches.open(CACHE_NAME)
+  await Promise.all([
+    cache.put('./index.html', withCacheTimestamp(response.clone())),
+    cache.put('./', withCacheTimestamp(response.clone()))
+  ])
+}
+
+async function pageResponse(request) {
+  const cached = await caches.match('./index.html')
+  if (pageCacheIsFresh(cached)) return cached
+  try {
+    const response = await fetch(request, { cache: 'no-store' })
+    if (response.ok) {
+      await cachePage(response)
+      return response
+    }
+    if (cached) return cached
+    return response
+  } catch (error) {
+    if (cached) return cached
+    throw error
+  }
+}
 
 async function precacheShell() {
   const cache = await caches.open(CACHE_NAME)
@@ -8,8 +51,7 @@ async function precacheShell() {
   const assets = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
     .map((match) => match[1])
     .filter((path) => !path.startsWith('data:') && new URL(path, self.location.href).origin === self.location.origin)
-  await cache.put('./index.html', indexResponse.clone())
-  await cache.put('./', indexResponse)
+  await cachePage(indexResponse)
   await cache.addAll([...new Set(['./app-icon.svg', './manifest.webmanifest', ...assets])])
 
   const workerAssets = []
@@ -38,7 +80,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || requestUrl.origin !== self.location.origin) return
 
   if (event.request.mode === 'navigate') {
-    event.respondWith(caches.match('./index.html').then((cached) => cached || fetch(event.request)))
+    event.respondWith(pageResponse(event.request))
     return
   }
 
