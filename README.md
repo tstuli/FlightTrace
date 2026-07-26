@@ -8,8 +8,8 @@ remain in the user's browser.
 ## Telemetry queries
 
 The log data explorer filters samples with readable expressions such as
-`` `RSSI (dB)` < 45 and `Rx Batt (V)` < 4.8 ``. Channel names can be inserted
-from the interface and are wrapped in backticks automatically. Queries support
+`` `RSSI (dB)` < 45 and `Rx Batt (V)` < 4.8 ``. The editor autocompletes channel
+names and syntax while typing, wrapping channel names in backticks automatically. Queries support
 `and`, `or`, `not`, parentheses, arithmetic, elapsed `time` in seconds, and the
 `between()`, `present()`, `missing()`, and `abs()` functions. Matching samples
 can be viewed as a trace and table or exported as normalized CSV.

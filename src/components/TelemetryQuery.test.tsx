@@ -37,4 +37,25 @@ describe('TelemetryQuery', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Unknown channel “Unknown”')
   })
+
+  it('autocompletes channels with the keyboard', () => {
+    render(<TelemetryQuery parsed={parsed} channelSettings={{ 'rssi||1': { label: 'Signal strength' } }} selectedChannelKeys={[]} />)
+    const editor = screen.getByLabelText('Condition')
+    fireEvent.change(editor, { target: { value: 'sig', selectionStart: 3, selectionEnd: 3 } })
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /Signal strength/ })).toBeInTheDocument()
+    fireEvent.keyDown(editor, { key: 'Enter' })
+
+    expect(editor).toHaveValue('`RSSI (dB)` ')
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
+
+  it('offers syntax suggestions on demand', () => {
+    render(<TelemetryQuery parsed={parsed} channelSettings={{}} selectedChannelKeys={[]} />)
+    const editor = screen.getByLabelText('Condition')
+    fireEvent.keyDown(editor, { key: ' ', ctrlKey: true })
+
+    expect(screen.getByRole('option', { name: /between/ })).toBeInTheDocument()
+  })
 })
