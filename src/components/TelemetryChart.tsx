@@ -10,7 +10,7 @@ const colors = [
   '#38c6e8', '#ff8a52', '#e87fc2', '#7b8cff', '#b9d653', '#d9a9ff'
 ]
 
-export function TelemetryChart({ parsed, channelKeys, onCursorTimeChange, expanded = false }: { parsed: ParsedLog; channelKeys: string[]; onCursorTimeChange?: (timestamp: number) => void; expanded?: boolean }) {
+export function TelemetryChart({ parsed, channelKeys, onCursorTimeChange, expanded = false, showPoints = false }: { parsed: ParsedLog; channelKeys: string[]; onCursorTimeChange?: (timestamp: number) => void; expanded?: boolean; showPoints?: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function TelemetryChart({ parsed, channelKeys, onCursorTimeChange, expand
           width: index < colors.length ? 1.6 : 1.9,
           dash: index < colors.length ? [] : [9, 5],
           spanGaps: false,
-          points: { show: false }
+          points: { show: showPoints, size: 4 }
         }))
       ]
     }
@@ -53,7 +53,7 @@ export function TelemetryChart({ parsed, channelKeys, onCursorTimeChange, expand
     const observer = new ResizeObserver(() => chart.setSize({ width: Math.max(320, host.clientWidth), height: chartHeight() }))
     observer.observe(host)
     return () => { observer.disconnect(); chart.destroy() }
-  }, [channelKeys, expanded, onCursorTimeChange, parsed])
+  }, [channelKeys, expanded, onCursorTimeChange, parsed, showPoints])
 
   if (!channelKeys.length) return <div className="empty-chart">Select at least one channel to draw a chart.</div>
   return <div className="chart-host" ref={hostRef} />

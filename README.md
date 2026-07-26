@@ -5,6 +5,15 @@ charting, and diagnosing FrSky and generic telemetry CSV logs. The hosting
 server delivers only the application shell. CSV contents and derived results
 remain in the user's browser.
 
+## Telemetry queries
+
+The log data explorer filters samples with readable expressions such as
+`` `RSSI (dB)` < 45 and `Rx Batt (V)` < 4.8 ``. Channel names can be inserted
+from the interface and are wrapped in backticks automatically. Queries support
+`and`, `or`, `not`, parentheses, arithmetic, elapsed `time` in seconds, and the
+`between()`, `present()`, `missing()`, and `abs()` functions. Matching samples
+can be viewed as a trace and table or exported as normalized CSV.
+
 ## Development
 
 Requires Node.js 22 or newer.
