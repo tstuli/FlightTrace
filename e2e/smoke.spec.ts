@@ -4,6 +4,10 @@ test('loads the flight library on desktop and mobile', async ({ page }) => {
   const requests: string[] = []
   page.on('request', (request) => requests.push(request.url()))
   await page.goto('/')
+  await expect(page.locator('html')).toHaveAttribute('translate', 'no')
+  await expect(page.locator('body')).toHaveAttribute('translate', 'no')
+  await expect(page.locator('#root')).toHaveAttribute('translate', 'no')
+  await expect(page.locator('meta[name="google"]')).toHaveAttribute('content', 'notranslate')
   await expect(page.getByRole('heading', { name: /Your flights/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Download or restore a backup' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Download backup' })).toBeVisible()
