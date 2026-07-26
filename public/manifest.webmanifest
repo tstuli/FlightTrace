@@ -1,0 +1,13 @@
+{
+  "name": "FrSky Telemetry Analyzer",
+  "short_name": "FlightTrace",
+  "description": "Analyze, organize, and compare FrSky telemetry CSV logs.",
+  "theme_color": "#09131f",
+  "background_color": "#09131f",
+  "display": "standalone",
+  "start_url": "./",
+  "scope": "./",
+  "icons": [
+    { "src": "app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

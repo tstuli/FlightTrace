@@ -1,0 +1,60 @@
+import { useEffect, useRef } from 'react'
+import uPlot from 'uplot'
+import 'uplot/dist/uPlot.min.css'
+import type { ChannelDefinition, ParsedLog } from '../types'
+
+export const MAX_GRAPH_CHANNELS = 24
+
+const colors = [
+  '#35d0ba', '#f3b64b', '#67a7ff', '#fa6d86', '#ad8cff', '#79d279',
+  '#38c6e8', '#ff8a52', '#e87fc2', '#7b8cff', '#b9d653', '#d9a9ff'
+]
+
+export function TelemetryChart({ parsed, channelKeys, onCursorTimeChange, expanded = false }: { parsed: ParsedLog; channelKeys: string[]; onCursorTimeChange?: (timestamp: number) => void; expanded?: boolean }) {
+  const hostRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const host = hostRef.current
+    if (!host || !channelKeys.length) return
+    const channels = channelKeys.map((key) => parsed.channels.find((channel) => channel.key === key)).filter((channel): channel is ChannelDefinition => Boolean(channel))
+    const units = [...new Set(channels.map((channel) => channel.unit || 'value'))]
+    const x = parsed.timestamps.map((timestamp) => (timestamp - parsed.startMs) / 1000)
+    const data: uPlot.AlignedData = [x, ...channelKeys.map((key) => parsed.series[key] ?? [])]
+    const chartHeight = () => {
+      if (!expanded) return 390
+      const legend = host.querySelector<HTMLElement>('.u-legend')
+      const legendHeight = legend ? Math.max(44, legend.offsetHeight) : 70
+      return Math.max(240, host.clientHeight - legendHeight)
+    }
+    const options: uPlot.Options = {
+      width: Math.max(320, host.clientWidth), height: chartHeight(),
+      cursor: { drag: { x: true, y: false, setScale: true } },
+      legend: { show: true, live: true },
+      hooks: { setCursor: [(plot) => { const index = plot.cursor.idx; if (index !== null && index !== undefined) onCursorTimeChange?.(parsed.timestamps[index]) }] },
+      scales: Object.fromEntries(units.map((unit) => [unit, { auto: true }])),
+      axes: [
+        { label: 'Elapsed time (seconds)', stroke: '#8fa5b8', grid: { stroke: '#1e3041' }, ticks: { stroke: '#355066' } },
+        ...units.slice(0, 3).map((unit, index) => ({ scale: unit, label: unit, side: index % 2 ? 1 : 3, stroke: colors[index], grid: { show: index === 0, stroke: '#1e3041' }, ticks: { stroke: '#355066' } } as uPlot.Axis))
+      ],
+      series: [
+        {},
+        ...channels.map((channel, index) => ({
+          label: channel.label,
+          scale: channel.unit || 'value',
+          stroke: colors[index % colors.length],
+          width: index < colors.length ? 1.6 : 1.9,
+          dash: index < colors.length ? [] : [9, 5],
+          spanGaps: false,
+          points: { show: false }
+        }))
+      ]
+    }
+    const chart = new uPlot(options, data, host)
+    const observer = new ResizeObserver(() => chart.setSize({ width: Math.max(320, host.clientWidth), height: chartHeight() }))
+    observer.observe(host)
+    return () => { observer.disconnect(); chart.destroy() }
+  }, [channelKeys, expanded, onCursorTimeChange, parsed])
+
+  if (!channelKeys.length) return <div className="empty-chart">Select at least one channel to draw a chart.</div>
+  return <div className="chart-host" ref={hostRef} />
+}
