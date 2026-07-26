@@ -19,6 +19,7 @@ describe('filename associations', () => {
   it('groups files by the aircraft name before the right-hand timestamp', () => {
     expect(filenameGroupKey('PIPER-.40-CUB-2026-06-01-12-00-00.csv')).toBe('piper-.40-cub')
     expect(filenameGroupKey('PIPER-.40-CUB-2026-06-01-12-00-00 (1).csv')).toBe('piper-.40-cub')
+    expect(filenameGroupKey('FrSky - PIPER-.40-CUB-2026-06-01-12-00.csv')).toBe('frsky - piper-.40-cub')
   })
 
   it('uses the closest timestamp when a filename group has belonged to multiple planes', () => {
@@ -30,6 +31,12 @@ describe('filename associations', () => {
     expect(historicalModelForFile('EDGE-540-2026-05-30-10-00-00.csv', logs)).toBe('model-new')
     expect(historicalModelForFile('EDGE-540-2025-01-03-10-00-00.csv', logs)).toBe('model-old')
     expect(historicalModelForFile('EDGE-540-2026-05-30-10-00-00 (1).csv', logs)).toBe('model-new')
+  })
+
+  it('does not perpetuate an old generic FrSky model assignment after improved parsing', () => {
+    const affectedLog = log('old-import', 'generic-frsky', 'FrSky - ANGEL-30-2025-07-18-14-17.csv')
+    expect(historicalModelForFile('FrSky - ANGEL-30-2025-07-18-15-02.csv', [affectedLog], [model('generic-frsky', 'FrSky')])).toBeUndefined()
+    expect(historicalModelForFile('FrSky - ANGEL-30-2025-07-18-15-02.csv', [affectedLog], [model('generic-frsky', 'FrSky - Angel 30')])).toBe('generic-frsky')
   })
 
   it('ranks likely renamed planes ahead of unrelated models', () => {

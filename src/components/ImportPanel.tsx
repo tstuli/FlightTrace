@@ -80,11 +80,12 @@ export function ImportPanel({ onImported }: { onImported: () => void }) {
         const batchModel = batchModelId ? await db.models.get(batchModelId) : undefined
         const alias = exactModel || batchModel ? undefined : await db.settings.get(aliasKey(normalizedName))
         const associatedModel = typeof alias?.value === 'string' ? await db.models.get(alias.value) : undefined
-        const historicalModelId = exactModel || batchModel || associatedModel ? undefined : historicalModelForFile(file.name, await db.logs.toArray())
+        const allModels = await db.models.toArray()
+        const historicalModelId = exactModel || batchModel || associatedModel ? undefined : historicalModelForFile(file.name, await db.logs.toArray(), allModels)
         const historicalModel = historicalModelId ? await db.models.get(historicalModelId) : undefined
         const model = exactModel ?? batchModel ?? associatedModel ?? historicalModel
         if (!model) {
-          const existingModels = rankModelsForFilename(file.name, await db.models.toArray())
+          const existingModels = rankModelsForFilename(file.name, allModels)
           const matchingFileCount = 1 + queueRef.current.filter((queued) => filenameGroupKey(queued.name) === normalizedName).length
           setProgress(null)
           setPending({ file, parsed, inferredName: identity.modelName, normalizedName, timestampLocal: identity.timestampLocal, matchingFileCount, existingModels })

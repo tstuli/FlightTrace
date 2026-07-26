@@ -11,10 +11,15 @@ function timestampValue(value?: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
-export function historicalModelForFile(fileName: string, logs: LogRecord[]): string | undefined {
+export function historicalModelForFile(fileName: string, logs: LogRecord[], models: ModelProfile[] = []): string | undefined {
   const identity = parseFileIdentity(fileName)
   const group = normalizeModelName(identity.modelName)
-  const candidates = logs.filter((log) => filenameGroupKey(log.fileName) === group)
+  const modelsById = new Map(models.map((model) => [model.id, model]))
+  const candidates = logs.filter((log) => {
+    if (filenameGroupKey(log.fileName) !== group) return false
+    const historicalModel = modelsById.get(log.modelId)
+    return !historicalModel || normalizeModelName(historicalModel.name) !== 'frsky' || group === 'frsky'
+  })
   if (!candidates.length) return undefined
   const target = timestampValue(identity.timestampLocal)
   if (target === undefined) return candidates.sort((a, b) => b.startLocal.localeCompare(a.startLocal))[0]?.modelId

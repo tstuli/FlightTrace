@@ -7,6 +7,12 @@ describe('parseFileIdentity', () => {
     expect(parseFileIdentity('PIPER-.40-CUB-2025-10-01-17-38-05.csv').modelName).toBe('PIPER-.40-CUB')
   })
 
+  it('keeps everything before timestamps that omit seconds', () => {
+    expect(parseFileIdentity('FrSky - ANGEL-30-2025-07-18-14-17.csv')).toEqual({ modelName: 'FrSky - ANGEL-30', timestampLocal: '2025-07-18T14:17:00' })
+    expect(parseFileIdentity('FrSky – PIPER-.40-CUB-2025-07-18-14-17 (2).csv').modelName).toBe('FrSky – PIPER-.40-CUB')
+    expect(parseFileIdentity('FrSky-ONE-2025-07-18-14-17.csv').modelName).toBe('FrSky-ONE')
+  })
+
   it('ignores duplicate-copy suffixes after the timestamp', () => {
     expect(parseFileIdentity('SLICK580-2025-10-04-12-14-07 (1).csv')).toEqual({ modelName: 'SLICK580', timestampLocal: '2025-10-04T12:14:07' })
     expect(parseFileIdentity('SLICK580-2025-10-04-12-14-07(23)')).toEqual({ modelName: 'SLICK580', timestampLocal: '2025-10-04T12:14:07' })

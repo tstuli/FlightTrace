@@ -127,6 +127,20 @@ test('imports a telemetry CSV through the adaptive plane wizard', async ({ page 
   await expect(page.getByRole('dialog', { name: 'Set up this plane' })).not.toBeVisible()
 })
 
+test('infers a plane from FrSky-prefixed filenames with minute timestamps', async ({ page }) => {
+  await page.goto('/')
+  const csv = Buffer.from('Date,Time,VFR(%)\n2025-07-18,14:17:00.000,100\n2025-07-18,14:17:01.000,95')
+  await page.locator('input[type="file"][accept*="csv"]').setInputFiles([
+    { name: 'FrSky - ANGEL-30-2025-07-18-14-17.csv', mimeType: 'text/csv', buffer: csv },
+    { name: 'FrSky - ANGEL-30-2025-07-18-15-02.csv', mimeType: 'text/csv', buffer: Buffer.from(`${csv.toString()}\n2025-07-18,14:17:02.000,90`) }
+  ])
+  await expect(page.getByRole('heading', { name: 'Set up this plane' })).toBeVisible()
+  await expect(page.getByLabel('Plane name')).toHaveValue('FrSky - ANGEL-30')
+  await page.getByRole('button', { name: 'Skip this plane for this upload' }).click()
+  await expect(page.getByText(/FrSky - ANGEL-30-2025-07-18-15-02\.csv; FrSky - ANGEL-30 is excluded from this upload/)).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Set up this plane' })).not.toBeVisible()
+})
+
 test('groups LiPo cells into pack voltage and cell-balance analysis', async ({ page }) => {
   await page.goto('/')
   const csv = [
