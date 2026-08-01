@@ -1,5 +1,5 @@
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
-import { db } from '../db'
+import { db, type AppSetting } from '../db'
 import { normalizeModelBatteries } from './battery'
 import { rawLogBytes } from './rawLog'
 import type { BackupManifest, LogRecord, ModelProfile } from '../types'
@@ -16,6 +16,7 @@ export async function exportBackup(selectedLogIds?: string[]): Promise<Blob> {
   const includedModels = models.filter((model) => modelIds.has(model.id))
   const flights = (await db.flights.toArray()).filter((flight) => logs.some((log) => log.id === flight.logId))
   const events = (await db.events.toArray()).filter((event) => logs.some((log) => log.id === event.logId))
+  const settings = await db.settings.toArray()
   const checksums = Object.fromEntries(logs.map((log) => [log.fileName, log.id]))
   const manifest: BackupManifest = {
     format: 'frsky-telemetry-backup', version: 1, createdAt: new Date().toISOString(), appVersion: '0.1.0',
@@ -25,7 +26,8 @@ export async function exportBackup(selectedLogIds?: string[]): Promise<Blob> {
     'manifest.json': strToU8(JSON.stringify(manifest, null, 2)),
     'models.json': strToU8(JSON.stringify(includedModels)),
     'flights.json': strToU8(JSON.stringify(flights)),
-    'events.json': strToU8(JSON.stringify(events))
+    'events.json': strToU8(JSON.stringify(events)),
+    'settings.json': strToU8(JSON.stringify(settings))
   }
   const serializable: SerializableLog[] = []
   for (const log of logs) {
@@ -49,8 +51,9 @@ export async function importBackup(file: File): Promise<{ models: number; logs: 
   const logs = JSON.parse(strFromU8(archive['logs.json'])) as SerializableLog[]
   const flights = JSON.parse(strFromU8(archive['flights.json']))
   const events = JSON.parse(strFromU8(archive['events.json']))
+  const settings = archive['settings.json'] ? JSON.parse(strFromU8(archive['settings.json'])) as AppSetting[] : []
   let skipped = 0
-  await db.transaction('rw', db.models, db.logs, db.flights, db.events, async () => {
+  await db.transaction('rw', db.models, db.logs, db.flights, db.events, db.settings, async () => {
     for (const model of models) {
       if (!(await db.models.get(model.id))) await db.models.add(normalizeModelBatteries(model))
     }
@@ -64,6 +67,7 @@ export async function importBackup(file: File): Promise<{ models: number; logs: 
     }
     for (const flight of flights) if (!(await db.flights.get(flight.id))) await db.flights.add(flight)
     for (const event of events) if (!(await db.events.get(event.id))) await db.events.add(event)
+    for (const setting of settings) if (setting && typeof setting.key === 'string') await db.settings.put(setting)
   })
   return { models: models.length, logs: logs.length - skipped, skipped }
 }

@@ -291,6 +291,18 @@ tbody tr:last-child td { border-bottom: 0; }
 .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
 .settings-card { border: 1px solid var(--line); border-radius: 14px; padding: 22px; background: #0d1d2b; }
 .settings-card p, .privacy-card p, .danger-zone p { color: var(--muted); line-height: 1.6; }
+.unit-settings-actions { display: flex; align-items: flex-end; flex-direction: column; gap: 10px; }
+.unit-save-status { color: var(--muted); font-size: .72rem; }
+.unit-save-status.saved { color: var(--mint); }
+.unit-save-status.error { color: var(--red); }
+.unit-settings-intro { margin-bottom: 18px; border: 1px solid #2b6259; border-radius: 14px; padding: 18px 20px; background: rgba(26,78,69,.15); }
+.unit-settings-intro strong { color: var(--mint); }
+.unit-settings-intro p { margin: 5px 0 0; color: #bdd2dc; font-size: .8rem; line-height: 1.55; }
+.unit-preferences-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.unit-preference-card { min-width: 0; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px 18px; border: 1px solid var(--line); border-radius: 14px; padding: 19px 20px; background: #0d1d2b; }
+.unit-preference-card > span { color: #eef7fc; font-size: 1rem; font-weight: 750; }
+.unit-preference-card small { max-width: 360px; color: var(--muted); font-size: .72rem; line-height: 1.45; }
+.unit-preference-card select { grid-column: 2; grid-row: 1 / span 2; min-width: 190px; border: 1px solid #294157; border-radius: 9px; padding: 10px 12px; background: #091620; color: #eef7fc; }
 .privacy-card { margin-top: 18px; border: 1px solid #2b6259; border-radius: 14px; padding: 23px; display: flex; gap: 20px; background: rgba(26,78,69,.15); }
 .privacy-card ul { color: #bdd2dc; display: flex; gap: 25px; padding-left: 18px; flex-wrap: wrap; }
 .lock-mark { color: var(--mint); font-size: 2.4rem; }
@@ -360,6 +372,10 @@ footer a:hover { color: var(--mint); }
   .log-main time { display: none; }
   .log-badges > span { display: none; }
   .settings-grid { grid-template-columns: 1fr; }
+  .unit-preferences-grid { grid-template-columns: 1fr; }
+  .unit-preference-card { grid-template-columns: 1fr; }
+  .unit-preference-card select { grid-column: 1; grid-row: auto; width: 100%; margin-top: 5px; }
+  .unit-settings-actions { align-items: flex-start; }
   .storage-card { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .danger-zone { align-items: stretch; flex-direction: column; }
   footer { flex-direction: column; align-items: flex-start; justify-content: center; gap: 6px; }

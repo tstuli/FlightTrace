@@ -14,6 +14,13 @@ names and syntax while typing, wrapping channel names in backticks automatically
 `between()`, `present()`, `missing()`, and `abs()` functions. Matching samples
 can be viewed as a trace and table or exported as normalized CSV.
 
+## Display units
+
+Global unit preferences can convert altitude, distance, speed, vertical speed,
+temperature, and pressure across charts, statistics, maps, telemetry queries,
+and normalized CSV exports. Conversion is display-only: imported telemetry,
+diagnostic thresholds, and raw JSON reports retain their recorded values.
+
 ## Development
 
 Requires Node.js 22 or newer.
@@ -80,7 +87,7 @@ security headers require a fronting CDN or custom hosting configuration.
 ## Backup format
 
 A backup is a ZIP archive with a versioned `manifest.json`, model/log metadata,
-flight segments, diagnostic events, and raw CSVs under `logs/`. Log IDs are
+flight segments, diagnostic events, global settings, and raw CSVs under `logs/`. Log IDs are
 SHA-256 content hashes and are used for duplicate detection during restore.
 
 ## License and warranty

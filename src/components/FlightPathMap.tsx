@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { buildFlightTrack, type FlightTrackPoint } from '../lib/gps'
+import { convertQuantityValue, type UnitPreferences } from '../lib/units'
 import type { ParsedLog } from '../types'
 
 const WIDTH = 1000
@@ -18,7 +19,10 @@ interface MapViewport {
   tiles: MapTile[]
 }
 
-function formatDistance(meters: number): string {
+function formatDistance(meters: number, preferences: UnitPreferences): string {
+  if (preferences.distance === 'mi') return `${convertQuantityValue(meters, 'distance', 'm', 'mi').toFixed(2)} mi`
+  if (preferences.distance === 'nmi') return `${convertQuantityValue(meters, 'distance', 'm', 'nmi').toFixed(2)} nmi`
+  if (preferences.distance === 'km') return `${convertQuantityValue(meters, 'distance', 'm', 'km').toFixed(2)} km`
   return meters >= 1000 ? `${(meters / 1000).toFixed(2)} km` : `${Math.round(meters)} m`
 }
 
@@ -84,7 +88,7 @@ function mapViewport(minLatitude: number, maxLatitude: number, minLongitude: num
   return { zoom, left, top, tiles }
 }
 
-export function FlightPathMap({ parsed }: { parsed: ParsedLog }) {
+export function FlightPathMap({ parsed, unitPreferences }: { parsed: ParsedLog; unitPreferences: UnitPreferences }) {
   const [showBasemap, setShowBasemap] = useState(false)
   const [tileError, setTileError] = useState(false)
   const track = useMemo(() => buildFlightTrack(parsed), [parsed])
@@ -106,7 +110,7 @@ export function FlightPathMap({ parsed }: { parsed: ParsedLog }) {
     <div className="panel-heading flight-map-heading">
       <div><span className="eyebrow">Position trace</span><h2 id="flight-path-title">Flight path</h2><p>Route colors show altitude from low to high. GPS analysis stays on this device.</p></div>
       <div className="flight-map-stats">
-        <span><small>GPS distance</small><strong>{formatDistance(track.distanceMeters)}</strong></span>
+        <span><small>GPS distance</small><strong>{formatDistance(track.distanceMeters, unitPreferences)}</strong></span>
         <span><small>Coordinate coverage</small><strong>{(track.coordinateCoverage * 100).toFixed(1)}%</strong></span>
         {hasAltitude && <span><small>Altitude range</small><strong>{formatAltitude(track.minAltitude!, track.channels.altitudeUnit)} – {formatAltitude(track.maxAltitude!, track.channels.altitudeUnit)}</strong></span>}
       </div>

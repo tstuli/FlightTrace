@@ -17,6 +17,13 @@ test('loads the flight library on desktop and mobile', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'GNU GPLv3' })).toHaveAttribute('href', 'https://github.com/tstuli/FlightTrace/blob/main/LICENSE')
   await page.getByRole('link', { name: 'Storage' }).click()
   await expect(page.getByRole('heading', { name: 'Storage & backups' })).toBeVisible()
+  await page.getByRole('link', { name: 'Units' }).click()
+  await expect(page.getByRole('heading', { name: 'Display units' })).toBeVisible()
+  await expect(page.getByLabel('Altitude unit')).toHaveValue('source')
+  await page.getByLabel('Altitude unit').selectOption('ft')
+  await expect(page.getByText('Saved in this browser')).toBeVisible()
+  await page.reload()
+  await expect(page.getByLabel('Altitude unit')).toHaveValue('ft')
   expect(requests.every((url) => new URL(url).hostname === '127.0.0.1')).toBeTruthy()
 })
 
@@ -226,6 +233,10 @@ test('maps flexible GPS columns and colors the flight path by altitude', async (
     })
   })
   await page.goto('/')
+  await page.getByRole('link', { name: 'Units' }).click()
+  await page.getByLabel('Altitude unit').selectOption('ft')
+  await expect(page.getByText('Saved in this browser')).toBeVisible()
+  await page.getByRole('link', { name: 'Library' }).click()
   const csv = [
     'Timestamp,GPS.lat(deg),Position Lng(deg),Relative Height(m),Throttle',
     '2026-06-01 12:00:00.000,43.6000,-79.6000,5,-1024',
@@ -248,6 +259,7 @@ test('maps flexible GPS columns and colors the flight path by altitude', async (
   await expect(page.getByRole('img', { name: 'GPS flight path colored by altitude' })).toBeVisible()
   await expect(page.getByText('GPS distance')).toBeVisible()
   await expect(page.getByText('Altitude range')).toBeVisible()
+  await expect(page.getByText('16.4 ft – 148 ft')).toBeVisible()
   expect(tileRequests).toEqual([])
   await expect(page.getByText(/shares the approximate flight area/)).toBeVisible()
   await page.getByRole('button', { name: 'Load street map' }).click()
